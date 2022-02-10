@@ -32,7 +32,7 @@
 ##### - 즉, 기존 단일 테이블을 Card, DailySpend, PayCard, PayCash 총 4개의 테이블로 개선한 결과, 빈번하게 검색했던 '당일 총 사용 금액'의 검색 속도가 향상되었습니다. 또한 향후 추가될 앱의 새로운 기능에 유연하게 대응할 수 있습니다.
 
 ### **[Transaction]**
-<img src="https://user-images.githubusercontent.com/87768226/153315662-f0b8224d-b6b6-4133-b672-aabdf11ce24f.JPG" width="40%" height="40%"> <img src="https://user-images.githubusercontent.com/87768226/153315673-c4976638-114f-43c7-bdfc-1e6c7fc464de.JPG" width="40%" height="40%"> 
+<img src="https://user-images.githubusercontent.com/87768226/153315662-f0b8224d-b6b6-4133-b672-aabdf11ce24f.JPG" width="35%" height="35%"> <img src="https://user-images.githubusercontent.com/87768226/153315673-c4976638-114f-43c7-bdfc-1e6c7fc464de.JPG" width="35%" height="35%"> 
 #### 문제1
 ##### DailySpend 테이블에 접근가능할 방법은 크게 두 가지입니다. 결제 SMS 수신했을 경우(흐름1과 흐름2)와 사용자가 결제 내역을 직접 수정(흐름3과 흐름4)하는 경우입니다. 따라서 결제 SMS 수신과 동시에 사용자의 결제 내역 수정이 이워 진다면, DailySpend 테이블에 동시 접근하는 경우 발생합니다.
 ###### ex) 결제 SMS 도착해 MyIntentService에서 DailySpend 테이블 수정 && 사용자가 DayFragment에서 결제 내역 삭제해 DailySpend 테이블 수정.
@@ -42,6 +42,40 @@
 #### 문제3
 ##### DailySpend테이블에 'xx일(해당일) 0원'을 insert하는 쿼리가 동시에 발생할 수 있습니다. 왜냐하면 당일 결제 행위가 처음이라면 'xx일 0원'을 insert하고, insert된 0원에 해당 결제 금액이 더해지는 방법으로 구현됐기 때문입니다.
 ###### ex) xx일 결제 내역이 없을 때 '결제 SMS 도착 수신(흐름1)'과 '사용자의 현금 내역 추가(흐름4)'가 동시에 일어나면, 둘 다 DailySpend 테이블에 selectTotal 쿼리를 수행해서 xx일에 대응되는 값이 없다는 것을 확인합니다. 그 결과 두 흐름 모두 DailySpend 테이블에 insertTotal을 수행해 'xx일 0원'을 삽입합니다.
-##### 해결방법
-###### 하나의 작업 단위에 필요한 쿼리들을 하나의 Transaction으로 만들어 실행합니다.
-###### 흐름1) 
+#### 해결방법
+##### 하나의 작업 단위에 필요한 쿼리들을 하나의 Transaction으로 만들어 실행합니다.
+###### 흐름1)
+###### 개선전
+<img src="https://user-images.githubusercontent.com/87768226/153317216-29f7a537-968b-4a73-b0ac-ca804feb689d.png" width="50%" height="50%">
+
+###### 개선후
+<img src="https://user-images.githubusercontent.com/87768226/153317228-a501c312-8ccd-4649-b1c3-1351ce6f71d9.png" width="40%" height="40%"> 
+<img src="https://user-images.githubusercontent.com/87768226/153317248-cf7fa60c-aff3-4063-b9d9-bd5d01ec0f3a.png" width="50%" height="50%">
+
+###### 흐름2)
+###### 개선전
+<img src="https://user-images.githubusercontent.com/87768226/153317257-3d3520f4-af14-4bef-9317-db6d98bb3136.png" width="50%" height="50%">
+
+###### 개선후
+<img src="https://user-images.githubusercontent.com/87768226/153317263-600b5da5-5243-4f64-ada3-903e115dc4d2.png" width="50%" height="50%">
+<img src="https://user-images.githubusercontent.com/87768226/153317271-cdb32759-9138-42ca-8288-8cc85657e463.png" width="50%" height="50%">
+
+###### 흐름3)
+###### 개선전
+<img src="https://user-images.githubusercontent.com/87768226/153317283-72a97ace-39e4-4bd3-82e2-1d1ee3b3aa2b.png" width="50%" height="50%">
+
+###### 개선후
+<img src="https://user-images.githubusercontent.com/87768226/153317296-d8283f0b-c62f-4277-aecd-7f0480c761f1.png" width="50%" height="50%">
+<img src="https://user-images.githubusercontent.com/87768226/153317305-fd7c1b3e-1c7c-4fec-8c50-8fce3f0cd4d5.png" width="50%" height="50%">
+
+###### 흐름4)
+###### 개선전
+<img src="https://user-images.githubusercontent.com/87768226/153317313-7e7b8c3b-bd38-4132-a318-0ff3dacadbaf.png" width="50%" height="50%">
+
+###### 개선후
+<img src="https://user-images.githubusercontent.com/87768226/153317325-b86403a9-06d7-4ba1-af2a-11fcf3ac473d.png" width="50%" height="50%">
+<img src="https://user-images.githubusercontent.com/87768226/153317334-ba7375d2-c082-4f1c-b982-382a30ce8c72.png" width="50%" height="50%">
+
+#### 해결결과
+##### - 하나의 작업(흐름1,2,3,4) 수행 이후 테이블 간의 데이터가 일치합니다. 쿼리 작업이 완료되지 않은 상태에서 앱이 종료되어도 rollback됩니다. 즉, 데이터의 정합성이 보장됩니다(문제2 해결).
+##### - SQLite의 transaction isolation level은 SERIALIZABLE이 default입니다. 따라서 하나의 transaction이 수행중이라면, 다른 transaction은 이미 수행 중인 transaction에서 참조하는 레코드에 접근할 수 없습니다. 따라서 문제1의 DailySpend 테이블에 Update 쿼리를 동시에 수행하는 작업을 방지할 수 있습니다. 또한 DailySpend 테이블에 selectTotal 쿼리를 수행해 'xx일 0원'을 insert하는 작업도, insert 이후 진행될 작업들과 묶여 하나의 transaction으로 실행되기 때문에 문제3이 해결됩니다.
