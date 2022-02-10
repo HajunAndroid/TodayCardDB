@@ -15,7 +15,7 @@
 ##### - DailySpend 테이블은 날짜별로 당일 총 사용 금액을 담고 있습니다. '오늘의 카드' 앱의 많은 Activity/Fragment에서 DailySpend 테이블의 total 칼럼으로 빠르게 당일 총 사용 금액을 조회할 수 있습니다(조회 속도 개선).
 #### Card 테이블 및 CardDAO
 <img src="https://user-images.githubusercontent.com/87768226/153308088-f345eef3-9b16-4402-981c-612e02b6fe38.png" width="20%" height="20%">
-<img src="https://user-images.githubusercontent.com/87768226/153310747-62e27e5f-1096-4328-afd0-21555671879d.JPG" width="55%" height="55%">
+<img src="https://user-images.githubusercontent.com/87768226/153310747-62e27e5f-1096-4328-afd0-21555671879d.JPG" width="50%" height="50%">
 
 #### DailySpend테이블 및 DailySpendDAO
 <img src="https://user-images.githubusercontent.com/87768226/153308095-7b9c8cc8-6b0a-45e6-b79a-6d7c579ab469.png" width="25%" height="25%">
@@ -32,7 +32,19 @@
 #### Query 사용표
 <img src="https://user-images.githubusercontent.com/87768226/153308361-c88a1627-ec77-471a-a122-f475d36d23c9.JPG">
 
-###### (Row: Activity 및 Fragment, Col: 테이블)
+###### (Row: Activity/Fragment/Service, Col: 테이블)
 ##### - 위 표에서 알 수 있듯 DailySpend 테이블의 total 칼럼(당일 총 사용 금액)을 빈번하게 조회하고 있습니다. 기존 테이블에서는 total 값을 구할 때마다 전체 테이블을 순회하며 조건에 맞는 price를 합쳐야 했습니다. 하지만 이제는 DailySpend의 selectTotal 쿼리만으로 total 값을 빠르게 조회할 수 있습니다. 또한 PayCard 테이블과 PayCash 테이블을 분리했습니다. 따라서 현금 사용 내역만 따로 조회가 가능해 이를 활용한 기능을 추가할 수 있습니다. 예를 들어, 연말정산 중 현금 사용 내역 조회가 필요할 경우, 카드 사용 내역을 제외한 현금 사용 내역만 조회할 수 있습니다.
 ##### - 안드로이드 앱은 사용자의 활동 로그를 추적할 수 있습니다. 앱 사용자가 어떤 기능을 많이 사용하는지, 앱의 핵심 비즈니스가 수행되는 과정에서 사용자가 어떤 행동을 하는지 분석할 수 있습니다. 이를 분석해 앱에 기능을 변경하거나 새로운 기능을 추가할 수 있습니다. 따라서 앱의 수정 및 확장 가능성을 고려해 초기 DB 테이블을 설계해야 합니다. 현재 비즈니스 로직만 고려해 DB를 설계한다면, 사용자 데이터 분석에 기반해 향후 앱에 변화가 있을 경우 제약이 생깁니다.
 ##### - 즉, 기존 단일 테이블을 Card, DailySpend, PayCard, PayCash 총 4개의 테이블로 개선한 결과, 빈번하게 검색했던 '당일 총 사용 금액'의 검색 속도가 향상되었습니다. 또한 향후 추가될 앱의 새로운 기능에 유연하게 대응할 수 있습니다.
+
+### **[Transcation]**
+<img src="https://user-images.githubusercontent.com/87768226/153315662-f0b8224d-b6b6-4133-b672-aabdf11ce24f.JPG" width="40%" height="40%"> <img src="https://user-images.githubusercontent.com/87768226/153315673-c4976638-114f-43c7-bdfc-1e6c7fc464de.JPG" width="40%" height="40%"> 
+#### 문제1
+##### DailySpend 테이블에 접근가능할 방법은 크게 두 가지입니다. 결제 SMS 수신했을 경우(흐름1과 흐름2)와 사용자가 결제 내역을 직접 수정(흐름3과 흐름4)하는 경우입니다. 따라서 결제 SMS 수신과 동시에 사용자의 결제 내역 수정이 이워 진다면, DailySpend 테이블에 동시 접근하는 경우 발생합니다.
+###### ex) 결제 SMS 도착해 MyIntentService에서 DailySpend 테이블 수정 && 사용자가 DayFragment에서 결제 내역 삭제해 DailySpend 테이블 수정.
+#### 문제2
+##### 하나의 작업을 완료하는 데 여러 쿼리가 수행됩니다. 그런데 수행 예정된 쿼리들이 모두 수행되지 않고 중간에 앱이 종료되면, 각 테이블간의 데이터가 일치하지 않게 됩니다.
+###### ex) 사용자가 카드 결제 내역을 삭제하는 작업(흐름3)은 두 개 쿼리가 모두 수행되야 합니다. DailySpend 테이블에 updateTotal 쿼리가 수행되고, 연이어 PayCard 테이블에 deletePayCard 쿼리가 수행되야 합니다.
+#### 문제3
+##### DailySpend테이블에 'xx일(해당일) 0원'을 insert하는 쿼리가 동시에 발생할 수 있습니다. 왜냐하면 당일 결제 행위가 처음이라면 'xx일 0원'을 insert하고, insert된 0원에 해당 결제 금액이 더해지는 방법으로 구현됐기 때문입니다.
+###### ex) xx일 결제 내역이 없을 때 '결제 SMS 도착 수신(흐름1)'과 '사용자의 현금 내역 추가(흐름4)'가 동시에 일어나면, 둘 다 DailySpend 테이블에 selectTotal 쿼리를 수행해서 xx일에 대응되는 값이 없다는 것을 확인합니다. 그 결과 두 흐름 모두 DailySpend 테이블에 insertTotal을 수행해 'xx일 0원'을 삽입합니다.
