@@ -33,7 +33,7 @@
 ##### - 즉, 기존 단일 테이블을 Card, DailySpend, PayCard, PayCash 총 4개의 테이블로 개선한 결과, 빈번하게 검색했던 '당일 총 사용 금액'의 검색 속도가 향상되었습니다. 또한 향후 추가될 앱의 새로운 기능에 유연하게 대응할 수 있습니다.
 
 ### **[Transaction]**
-<img src="https://user-images.githubusercontent.com/87768226/153315662-f0b8224d-b6b6-4133-b672-aabdf11ce24f.JPG" width="35%" height="35%"> <img src="https://user-images.githubusercontent.com/87768226/153315673-c4976638-114f-43c7-bdfc-1e6c7fc464de.JPG" width="35%" height="35%"> 
+<img src="https://user-images.githubusercontent.com/87768226/153315662-f0b8224d-b6b6-4133-b672-aabdf11ce24f.JPG" width="40%" height="40%"> <img src="https://user-images.githubusercontent.com/87768226/153315673-c4976638-114f-43c7-bdfc-1e6c7fc464de.JPG" width="40%" height="40%"> 
 #### 문제1
 ##### DailySpend 테이블에 접근가능할 방법은 크게 두 가지입니다. 결제 SMS 수신했을 경우(흐름1과 흐름2)와 사용자가 결제 내역을 직접 수정(흐름3과 흐름4)하는 경우입니다. 따라서 결제 SMS 수신과 동시에 사용자의 결제 내역 수정이 이워 진다면, DailySpend 테이블에 동시 접근하는 경우 발생합니다.
 ###### ex) 결제 SMS 도착해 MyIntentService에서 DailySpend 테이블 수정 && 사용자가 DayFragment에서 결제 내역 삭제해 DailySpend 테이블 수정.
@@ -80,6 +80,6 @@
 #### 해결결과
 ##### - 하나의 작업(흐름1,2,3,4) 수행 이후 테이블 간의 데이터가 일치합니다. 쿼리 작업이 완료되지 않은 상태에서 앱이 종료되어도 rollback됩니다. 즉, 데이터의 정합성이 보장됩니다(문제2 해결).
 ##### - SQLite의 transaction isolation level은 SERIALIZABLE이 default입니다. 따라서 하나의 transaction이 수행중이라면, 다른 transaction은 이미 수행 중인 transaction에서 참조하는 레코드에 접근할 수 없습니다. 따라서 문제1의 DailySpend 테이블에 Update 쿼리를 동시에 수행하는 작업을 방지할 수 있습니다. 또한 DailySpend 테이블에 selectTotal 쿼리를 수행해 'xx일 0원'을 insert하는 작업도, insert 이후 진행될 작업들과 묶여 하나의 transaction으로 실행되기 때문에 문제3이 해결됩니다.
-<img src="https://user-images.githubusercontent.com/87768226/153322467-2d254e7e-cc2d-4fe2-8a91-0dc6b6ee8e5f.JPG" width="50%" height="50%">
+<img src="https://user-images.githubusercontent.com/87768226/153322467-2d254e7e-cc2d-4fe2-8a91-0dc6b6ee8e5f.JPG" width="60%" height="60%">
 
-<img src="https://user-images.githubusercontent.com/87768226/153322469-ad484400-0c69-4b38-985c-9b16058e6166.JPG" width="50%" height="50%">
+<img src="https://user-images.githubusercontent.com/87768226/153322469-ad484400-0c69-4b38-985c-9b16058e6166.JPG" width="60%" height="60%">
