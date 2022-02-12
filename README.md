@@ -16,7 +16,7 @@
 <img src="https://user-images.githubusercontent.com/87768226/153308088-f345eef3-9b16-4402-981c-612e02b6fe38.png" width="20%" height="20%"> <img src="https://user-images.githubusercontent.com/87768226/153310747-62e27e5f-1096-4328-afd0-21555671879d.JPG" width="50%" height="50%">
 
 #### DailySpend테이블 및 DailySpendDAO
-<img src="https://user-images.githubusercontent.com/87768226/153308095-7b9c8cc8-6b0a-45e6-b79a-6d7c579ab469.png" width="25%" height="25%"> <img src="https://user-images.githubusercontent.com/87768226/153308098-c68021cb-698c-443e-b353-8d2ccc5a843d.png">
+<img src="https://user-images.githubusercontent.com/87768226/153308095-7b9c8cc8-6b0a-45e6-b79a-6d7c579ab469.png" width="25%" height="25%"> <img src="https://user-images.githubusercontent.com/87768226/153308098-c68021cb-698c-443e-b353-8d2ccc5a843d.png" width="50%" height="50%">
 
 #### PayCard 테이블 및 PayCardDAO
 <img src="https://user-images.githubusercontent.com/87768226/153308101-9ae142d0-c4a9-4cae-aee9-69297899c564.png" width="45%" height="45%"> <img src="https://user-images.githubusercontent.com/87768226/153308111-ea89332e-860d-40e3-a2cb-2e436053d739.png" width="45%" height="45%">
