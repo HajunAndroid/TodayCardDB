@@ -3,10 +3,10 @@
 ### 테이블 개선 사유
 ##### 기존에는 단일 테이블에 모든 데이터를 저장했습니다. 그 결과 데이터 중복 저장 발생 및 검색 성능 하락 등의 문제가 발생했습니다. 또한 A/B Test와 같은 데이터 기반 사용자 UX 개선 작업에 필요한 데이터 수집에 있어 한계에 도달했습니다. 즉, 기존 테이블에 기반해서는 앱에 새로운 기능을 추가하고 확장하는 데 어려움이 발생했습니다. 따라서 검색 성능을 향상하고 앱의 원활한 확장성을 위해 TodayCard DB 테이블을 개선했습니다. 그리고 안드로이드 권장 아키텍처인 MVVM을 위해 기존의 DBHelper가 아닌 Room을 사용했습니다.
 ### **[기존 테이블]**
-<img src="https://user-images.githubusercontent.com/87768226/153307898-459969c7-1b78-473d-aa5d-bcb32e32bace.png" width="27%" height="27%"> <img src="https://user-images.githubusercontent.com/87768226/153307962-0be032eb-fc76-48c9-a608-7bd1dbdeb7f3.png" width="12%" height="12%">
+<img src="https://user-images.githubusercontent.com/87768226/153307898-459969c7-1b78-473d-aa5d-bcb32e32bace.png" width="30%" height="30%"> <img src="https://user-images.githubusercontent.com/87768226/153307962-0be032eb-fc76-48c9-a608-7bd1dbdeb7f3.png" width="15%" height="15%">
 
 ### **[개선 테이블]**
-<img src="https://user-images.githubusercontent.com/87768226/153307993-128ebb56-c245-4a68-9c2d-6741c8dcf22e.png" width="35%" height="35%"> <img src="https://user-images.githubusercontent.com/87768226/153308012-4494fa88-5d8e-4aae-93e3-4c7cc7bc8e0b.png" width="35%" height="35%">
+<img src="https://user-images.githubusercontent.com/87768226/153307993-128ebb56-c245-4a68-9c2d-6741c8dcf22e.png" width="40%" height="40%"> <img src="https://user-images.githubusercontent.com/87768226/153308012-4494fa88-5d8e-4aae-93e3-4c7cc7bc8e0b.png" width="40%" height="40%">
 
 ##### - 개선 후 총 4개의 테이블이 생성되었습니다. Card, DailySpend, PayCard, PayCash. 각 테이블을 Android에 내장되어 있는 SQLiteDatabase를 이용해 생성 및 사용했습니다. 이때 Room으로 DB를 핸들링했습니다.
 ##### - Card 테이블은 결제한 카드 정보를 담고 있습니다. 결제 카드를 추가하고 삭제할 수 있습니다(기능 확장1). 그리고 결제한 결제한 카드별로 사용 내역을 조회할 수 있습니다(기능 확장2).
